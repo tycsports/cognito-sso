@@ -1,0 +1,7 @@
+node_modules/
+
+# config.js se genera desde .env — no commitear
+config.js
+
+# variables de entorno — nunca al repo
+.env

@@ -1,0 +1,16 @@
+{
+  "name": "cognito-sso",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "generate:config":      "node scripts/generate-config.js",
+    "generate:config:mock": "node scripts/generate-config.js .env.mock",
+    "predev":               "node scripts/generate-config.js",
+    "dev":                  "serve . -p 8080 --no-clipboard",
+    "predev:mock":          "node scripts/generate-config.js .env.mock",
+    "dev:mock":             "node scripts/mock-server.js"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

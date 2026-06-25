@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO Dashboard — TyC Sports</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:      #1c66d9;
+            --primary-dim:  rgba(28,102,217,0.08);
+            --primary-mid:  rgba(28,102,217,0.15);
+            --green:        #16a34a;
+            --green-dim:    rgba(22,163,74,0.08);
+            --green-mid:    rgba(22,163,74,0.18);
+            --yellow:       #d97706;
+            --yellow-dim:   rgba(217,119,6,0.08);
+            --yellow-mid:   rgba(217,119,6,0.18);
+            --bg:           #f0f4fb;
+            --surface:      #ffffff;
+            --surface2:     #f7f9fd;
+            --border:       #dde5f0;
+            --border2:      #c8d6e8;
+            --text:         #0f172a;
+            --text-muted:   #64748b;
+            --text-dim:     #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ─────────────────────────────────── */
+        header {
+            background: var(--primary);
+            padding: 0 32px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(28,102,217,0.25);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo img { height: 24px; filter: brightness(0) invert(1); }
+        .header-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.25); }
+        .header-badge {
+            font-size: 12px; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: rgba(255,255,255,0.75);
+        }
+        .header-right { font-size: 12px; color: rgba(255,255,255,0.55); }
+
+        /* ── Layout ──────────────────────────────────── */
+        main {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 36px 24px 64px;
+        }
+
+        /* ── SSO Banner ──────────────────────────────── */
+        .sso-banner {
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: var(--surface);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .sso-banner.both { background: #f0faf4; border-color: #bbddc9; }
+        .sso-banner.one  { background: #fefaf0; border-color: #e8d5a0; }
+        .sso-banner.none { background: var(--surface2); border-color: var(--border); }
+
+        .banner-icon {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+        }
+        .sso-banner.both .banner-icon { background: var(--green-mid);  color: var(--green); }
+        .sso-banner.one  .banner-icon { background: var(--yellow-mid); color: var(--yellow); }
+        .sso-banner.none .banner-icon { background: var(--border);     color: var(--text-dim); }
+
+        .banner-body strong { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+        .sso-banner.both .banner-body strong { color: var(--green); }
+        .sso-banner.one  .banner-body strong { color: var(--yellow); }
+        .sso-banner.none .banner-body strong { color: var(--text-muted); }
+        .banner-body p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+        /* ── Cards — stacked vertical ────────────────── */
+        .cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .site-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .card-tycsports { border-top: 3px solid var(--primary); }
+        .card-play      { border-top: 3px solid var(--primary); }
+
+        .card-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface);
+        }
+
+        .card-header img.site-logo { height: 18px; width: auto; object-fit: contain; }
+        .card-header-meta { flex: 1; min-width: 0; }
+        .card-url { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+        .card-badge {
+            font-size: 11px; font-weight: 600;
+            padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+        }
+        .card-badge.active   { background: var(--green-dim); color: var(--green); }
+        .card-badge.inactive { background: var(--surface2);  color: var(--text-dim); border: 1px solid var(--border); }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .status-dot.active   { background: var(--green); box-shadow: 0 0 0 3px var(--green-dim); }
+        .status-dot.inactive { background: var(--border2); }
+
+        /* ── Card body ───────────────────────────────── */
+        .card-body {
+            background: var(--surface2);
+        }
+
+        .no-session {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+        .no-session .icon { opacity: 0.35; }
+
+        /* ── User dropdown (details/summary) ─────────── */
+        .user-details { list-style: none; }
+        .user-details[open] .chevron { transform: rotate(180deg); }
+
+        .user-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            cursor: pointer;
+            user-select: none;
+            list-style: none;
+        }
+        .user-summary::-webkit-details-marker { display: none; }
+        .user-summary:hover { background: rgba(0,0,0,0.02); }
+
+        .user-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            object-fit: cover; border: 2px solid var(--border); flex-shrink: 0;
+        }
+        .user-avatar-placeholder {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--primary-dim); border: 2px solid var(--primary-mid);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; flex-shrink: 0;
+        }
+
+        .user-email { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; min-width: 0; }
+
+        .provider-pill {
+            font-size: 11px; font-weight: 600;
+            padding: 2px 9px; border-radius: 20px;
+            background: var(--primary-dim); color: var(--primary);
+            border: 1px solid var(--primary-mid);
+            flex-shrink: 0;
+        }
+
+        .chevron {
+            font-size: 11px; color: var(--text-dim);
+            transition: transform 0.2s; flex-shrink: 0;
+        }
+
+        /* Expanded detail panel */
+        .user-expanded {
+            border-top: 1px solid var(--border);
+            padding: 14px 18px;
+            background: var(--surface);
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+        }
+
+        .data-item label {
+            display: block;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--text-dim); margin-bottom: 4px;
+        }
+        .data-item value {
+            display: block; font-size: 12px; color: var(--text-muted);
+        }
+        .data-item value.mono {
+            font-family: 'SF Mono', 'Cascadia Code', monospace;
+            font-size: 11px; color: var(--text-dim); word-break: break-all;
+        }
+
+        /* ── Actions ─────────────────────────────────── */
+        .section-label {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--text-dim); margin-bottom: 12px;
+        }
+
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 10px 24px; border-radius: 8px;
+            min-width: 150px; min-height: 42px;
+            cursor: pointer; text-decoration: none; border: none;
+            transition: opacity 0.15s, box-shadow 0.15s;
+        }
+        .btn:hover  { opacity: 0.88; box-shadow: 0 4px 12px rgba(28,102,217,0.15); }
+        .btn:active { transform: scale(0.98); }
+        .btn img { height: 20px; max-width: 120px; object-fit: contain; }
+
+        .btn-logo {
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+        .btn-ghost {
+            background: var(--surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border2);
+            font-size: 13px; font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <div class="header-logo">
+            <img src="https://statics-files.tycsports.com/frontend/tycsports/img/logos_2026/logo-azul.svg" alt="TyC Sports">
+        </div>
+        <div class="header-divider"></div>
+        <span class="header-badge">SSO Dashboard</span>
+    </div>
+    <span class="header-right">auth.tycsports.com</span>
+</header>
+
+<main>
+
+    <div id="sso-banner" class="sso-banner none">
+        <div class="banner-icon" id="banner-icon">—</div>
+        <div class="banner-body">
+            <strong id="banner-title">Verificando sesiones...</strong>
+            <p id="banner-desc"></p>
+        </div>
+    </div>
+
+    <div class="cards">
+
+        <div class="site-card card-tycsports">
+            <div class="card-header">
+                <div class="status-dot inactive" id="dot-tycsports"></div>
+                <div class="card-header-meta">
+                    <img class="site-logo" src="https://statics-files.tycsports.com/frontend/tycsports/img/logos_2026/logo-azul.svg" alt="TyC Sports">
+                    <div class="card-url">www.tycsports.com</div>
+                </div>
+                <span class="card-badge inactive" id="badge-tycsports">Sin sesión</span>
+            </div>
+            <div class="card-body" id="body-tycsports">
+                <div class="no-session"><span class="icon">○</span> No hay sesión activa</div>
+            </div>
+        </div>
+
+        <div class="site-card card-play">
+            <div class="card-header">
+                <div class="status-dot inactive" id="dot-play"></div>
+                <div class="card-header-meta">
+                    <img class="site-logo" src="https://statics-files.tycsports.com/frontend/tycsports/img/logos_2026/logo-play-azul.svg" alt="TyC Sports Play">
+                    <div class="card-url">play.tycsports.com</div>
+                </div>
+                <span class="card-badge inactive" id="badge-play">Sin sesión</span>
+            </div>
+            <div class="card-body" id="body-play">
+                <div class="no-session"><span class="icon">○</span> No hay sesión activa</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="section-label">Navegar</div>
+    <div class="actions">
+        <a href="../tycsports/index.html" class="btn btn-logo">
+            <img src="https://statics-files.tycsports.com/frontend/tycsports/img/logos_2026/logo-azul.svg" alt="TyC Sports">
+        </a>
+        <a href="../play/index.html" class="btn btn-logo">
+            <img src="https://statics-files.tycsports.com/frontend/tycsports/img/logos_2026/logo-play-azul.svg" alt="TyC Sports Play">
+        </a>
+        <button class="btn btn-ghost" onclick="location.reload()">↻ Actualizar</button>
+    </div>
+
+</main>
+
+<script src="../config.js"></script>
+<script src="../js/pkce.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+    function renderCard(site, dotId, badgeId, bodyId) {
+        const user    = Auth.getUser(site);
+        const session = Auth.getSession(site);
+        const dot     = document.getElementById(dotId);
+        const badge   = document.getElementById(badgeId);
+        const body    = document.getElementById(bodyId);
+
+        if (user && session) {
+            dot.className     = 'status-dot active';
+            badge.className   = 'card-badge active';
+            badge.textContent = 'Activa';
+
+            const expTime = new Date(session.expiry).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            const avatarHtml = user.picture
+                ? `<img class="user-avatar" src="${user.picture}" alt="" onerror="this.style.display='none'">`
+                : `<div class="user-avatar-placeholder">👤</div>`;
+
+            body.innerHTML = `
+                <details class="user-details">
+                    <summary class="user-summary">
+                        ${avatarHtml}
+                        <span class="user-email">${user.email || user.name}</span>
+                        <span class="provider-pill">${user.provider}</span>
+                        <span class="chevron">▾</span>
+                    </summary>
+                    <div class="user-expanded">
+                        <div class="data-item">
+                            <label>Cognito ID</label>
+                            <value class="mono">${user.sub}</value>
+                        </div>
+                        <div class="data-item">
+                            <label>Expira</label>
+                            <value>${expTime}hs</value>
+                        </div>
+                    </div>
+                </details>
+            `;
+            return true;
+        }
+
+        dot.className     = 'status-dot inactive';
+        badge.className   = 'card-badge inactive';
+        badge.textContent = 'Sin sesión';
+        body.innerHTML    = `<div class="no-session"><span class="icon">○</span> No hay sesión activa</div>`;
+        return false;
+    }
+
+    function updateBanner(hasTyc, hasPlay) {
+        const banner = document.getElementById('sso-banner');
+        const icon   = document.getElementById('banner-icon');
+        const title  = document.getElementById('banner-title');
+        const desc   = document.getElementById('banner-desc');
+
+        if (hasTyc && hasPlay) {
+            banner.className  = 'sso-banner both';
+            icon.textContent  = '✓';
+            title.textContent = 'SSO activo — ambas sesiones verificadas';
+            desc.textContent  = 'El mismo usuario está autenticado en TyC Sports y en Play.';
+        } else if (hasTyc || hasPlay) {
+            banner.className  = 'sso-banner one';
+            icon.textContent  = '◑';
+            const active   = hasTyc ? 'TyC Sports' : 'Play';
+            const inactive = hasTyc ? 'Play' : 'TyC Sports';
+            title.textContent = `Sesión parcial — solo ${active} autenticado`;
+            desc.textContent  = `Andá a ${inactive} y hacé login — Cognito debería completarlo sin pedir credenciales.`;
+        } else {
+            banner.className  = 'sso-banner none';
+            icon.textContent  = '—';
+            title.textContent = 'Sin sesiones activas';
+            desc.textContent  = 'Iniciá sesión en cualquiera de los dos sitios para ver el SSO en acción.';
+        }
+    }
+
+    const hasTyc  = renderCard('tycsports', 'dot-tycsports', 'badge-tycsports', 'body-tycsports');
+    const hasPlay = renderCard('play',       'dot-play',      'badge-play',      'body-play');
+    updateBanner(hasTyc, hasPlay);
+</script>
+</body>
+</html>

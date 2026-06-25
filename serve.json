@@ -1,0 +1,12 @@
+{
+  "cleanUrls": false,
+  "directoryListing": false,
+  "rewrites": [
+    { "source": "/tycsports",  "destination": "/tycsports/index.html" },
+    { "source": "/tycsports/", "destination": "/tycsports/index.html" },
+    { "source": "/play",       "destination": "/play/index.html" },
+    { "source": "/play/",      "destination": "/play/index.html" },
+    { "source": "/sso",        "destination": "/sso/index.html" },
+    { "source": "/sso/",       "destination": "/sso/index.html" }
+  ]
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TyC Sports Play — Autenticando...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #060a14; color: #fff;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .card {
+            text-align: center;
+            background: #0d1424;
+            border: 1px solid #1a2540;
+            border-radius: 12px;
+            padding: 40px 48px;
+            max-width: 380px;
+        }
+        .logo { font-size: 24px; font-weight: 900; margin-bottom: 24px; }
+        .logo span { color: #0066cc; }
+        .logo em { font-style: normal; color: #4da6ff; font-size: 18px; font-weight: 600; margin-left: 4px; }
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid #1a2540;
+            border-top-color: #0066cc;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        p { color: #6699cc; font-size: 14px; line-height: 1.6; }
+        .error-box {
+            background: #1a0505; border: 1px solid #7f1d1d;
+            border-radius: 8px; padding: 16px; margin-top: 16px;
+            color: #fca5a5; font-size: 13px; text-align: left;
+        }
+        .error-box strong { display: block; margin-bottom: 4px; color: #f87171; }
+        a { color: #0066cc; text-decoration: none; font-size: 13px; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">TyC<span>Sports</span><em>Play</em></div>
+    <div class="spinner" id="spinner"></div>
+    <p id="msg">Completando autenticación...</p>
+    <div id="error-box" class="error-box" style="display:none">
+        <strong>Error de autenticación</strong>
+        <span id="error-msg"></span>
+    </div>
+    <br>
+    <a href="./" id="back-link" style="display:none">← Volver al inicio</a>
+</div>
+
+<script src="../config.js"></script>
+<script src="../js/pkce.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+    const SITE = 'play';
+
+    (async function () {
+        try {
+            await Auth.handleCallback(SITE);
+            document.getElementById('msg').textContent          = '¡Listo! Redirigiendo...';
+            document.getElementById('spinner').style.borderTopColor = '#22c55e';
+            setTimeout(() => { window.location.href = './'; }, 800);
+        } catch (err) {
+            document.getElementById('spinner').style.display       = 'none';
+            document.getElementById('msg').textContent             = 'No se pudo completar el login.';
+            document.getElementById('error-box').style.display     = 'block';
+            document.getElementById('error-msg').textContent       = err.message || 'Error desconocido.';
+            document.getElementById('back-link').style.display     = 'inline';
+        }
+    })();
+</script>
+</body>
+</html>
