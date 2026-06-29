@@ -250,6 +250,55 @@
             font-size: 13px; font-weight: 600;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
+
+        /* ── Token inspector ─────────────────────────── */
+        .token-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 28px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .token-section-header {
+            padding: 12px 18px;
+            background: #1e293b;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .token-section-header span {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            color: #94a3b8;
+        }
+        .dot-green { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+
+        .token-row {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .token-row:last-child { border-bottom: none; }
+        .token-row-label {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--text-dim);
+        }
+        .token-row-value {
+            font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 11px; color: #e2e8f0;
+            background: #1e293b;
+            padding: 8px 12px; border-radius: 6px;
+            word-break: break-all; line-height: 1.6;
+        }
+        .token-row-value .kw  { color: #7dd3fc; }
+        .token-row-value .val { color: #86efac; }
+        .token-row-value .dim { color: #64748b; }
+        .token-row-value .tok { color: #fde68a; }
+        .token-empty {
+            padding: 20px 18px;
+            font-size: 13px; color: var(--text-dim);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -305,6 +354,17 @@
             </div>
         </div>
 
+    </div>
+
+    <div class="section-label">Token & URL de autorización</div>
+    <div class="token-section" id="token-section">
+        <div class="token-section-header">
+            <div class="dot-green"></div>
+            <span>Flujo OAuth2 — en vivo</span>
+        </div>
+        <div id="token-body">
+            <div class="token-empty">Iniciá sesión en alguno de los sitios para ver el token.</div>
+        </div>
     </div>
 
     <div class="section-label">Navegar</div>
@@ -400,6 +460,81 @@
     const hasTyc  = renderCard('tycsports', 'dot-tycsports', 'badge-tycsports', 'body-tycsports');
     const hasPlay = renderCard('play',       'dot-play',      'badge-play',      'body-play');
     updateBanner(hasTyc, hasPlay);
+
+    function truncate(str, n) {
+        if (!str) return '—';
+        return str.length > n ? str.slice(0, n) + '…' : str;
+    }
+
+    function decodeJWT(token) {
+        try {
+            const payload = token.split('.')[1];
+            return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+        } catch { return null; }
+    }
+
+    function renderTokenSection() {
+        const body      = document.getElementById('token-body');
+        const tycSess   = Auth.getSession('tycsports');
+        const playSess  = Auth.getSession('play');
+        const session   = tycSess || playSess;
+        const site      = tycSess ? 'tycsports' : 'play';
+        const siteLbl   = site === 'tycsports' ? 'www.tycsports.com' : 'play.tycsports.com';
+
+        if (!session) return;
+
+        const cfg       = window.AWS_CONFIG;
+        const domain    = cfg.aws_cognito_hosted_ui_domain;
+        const clientId  = cfg.sites[site].client_id;
+        const accessTok = session.accessToken || '';
+        const claims    = decodeJWT(session.idToken);
+
+        const redirectUri = `${cfg.redirect_base}/${site}/callback.html`;
+        const authUrl =
+            `https://${domain}/oauth2/authorize\n` +
+            `  ?response_type=<span class="kw">code</span>\n` +
+            `  &client_id=<span class="val">${clientId}</span>\n` +
+            `  &redirect_uri=<span class="val">${redirectUri}</span>\n` +
+            `  &scope=<span class="val">openid email profile</span>\n` +
+            `  &code_challenge=<span class="tok">Ax3k…[PKCE]</span>\n` +
+            `  &code_challenge_method=<span class="val">S256</span>`;
+
+        const callbackUrl =
+            `https://${siteLbl}/callback\n` +
+            `  ?code=<span class="tok">SrT9mK…[authorization_code]</span>\n` +
+            `  &state=<span class="dim">[verificado client-side]</span>`;
+
+        const authHeader =
+            `POST https://${domain}/oauth2/token\n\n` +
+            `Authorization: <span class="kw">Bearer</span> <span class="tok">${truncate(accessTok, 40)}</span>\n\n` +
+            `<span class="dim">→ AppSync / generateLiveToken usan este header</span>`;
+
+        const claimsHtml = claims ? Object.entries(claims)
+            .filter(([k]) => ['sub','email','name','given_name','family_name','identities'].includes(k))
+            .map(([k,v]) => `<span class="kw">${k}</span>: <span class="val">${typeof v === 'object' ? JSON.stringify(v) : v}</span>`)
+            .join('\n') : '—';
+
+        body.innerHTML = `
+            <div class="token-row">
+                <div class="token-row-label">1 — URL de autorización (redirect al Hosted UI)</div>
+                <div class="token-row-value">${authUrl}</div>
+            </div>
+            <div class="token-row">
+                <div class="token-row-label">2 — Callback con authorization code</div>
+                <div class="token-row-value">${callbackUrl}</div>
+            </div>
+            <div class="token-row">
+                <div class="token-row-label">3 — Access token → API calls</div>
+                <div class="token-row-value">${authHeader}</div>
+            </div>
+            <div class="token-row">
+                <div class="token-row-label">4 — Claims del id_token (usuario)</div>
+                <div class="token-row-value">${claimsHtml}</div>
+            </div>
+        `;
+    }
+
+    renderTokenSection();
 </script>
 </body>
 </html>

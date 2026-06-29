@@ -49,6 +49,7 @@ const Auth = (function () {
             state,
             code_challenge:        challenge,
             code_challenge_method: 'S256',
+            lang:                  'es',
         });
 
         if (identityProvider) {
